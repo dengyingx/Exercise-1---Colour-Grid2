@@ -1,0 +1,75 @@
+import requests
+import json
+import codecs
+import sys
+
+def replaceSpace(input):
+    inject = "%20"
+    for i in range(len(input)):
+        if (input[i] == ' '):
+            input = input.replace(input[i], inject)
+            
+    return input
+
+BaseURL = 'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/'
+
+ApiKey='your API key'
+#UnitGroup sets the units of the output - us or metric
+UnitGroup='us'
+
+#Location for the weather data
+Location=parent().par.Location.eval()
+
+#Optional start and end dates
+#If nothing is specified, the forecast is retrieved. 
+#If start date only is specified, a single historical or forecast day will be retrieved
+#If both start and and end date are specified, a date range will be retrieved
+StartDate = ''
+EndDate=''
+
+#JSON or CSV 
+#JSON format supports daily, hourly, current conditions, weather alerts and events in a single JSON package
+#CSV format requires an 'include' parameter below to indicate which table section is required
+ContentType="json"
+
+#include sections
+#values include days,hours,current,alerts
+Include="current"
+
+#basic query including location
+ApiQuery=BaseURL + Location
+
+#append the start and end date if present
+if (len(StartDate)):
+    ApiQuery+="/"+StartDate
+    if (len(EndDate)):
+        ApiQuery+="/"+EndDate
+
+#Url is completed. Now add query parameters (could be passed as GET or POST)
+ApiQuery+="?"
+
+#append each parameter as necessary
+if (len(UnitGroup)):
+    ApiQuery+="&unitGroup="+UnitGroup
+
+if (len(ContentType)):
+    ApiQuery+="&contentType="+ContentType
+
+if (len(Include)):
+    ApiQuery+="&include="+Include
+
+ApiQuery+="&key="+ApiKey
+
+print(' - Running query URL: ', ApiQuery)
+print()
+
+try:
+    headers = {
+        'User-Agent': 'My User Agent 1.0',
+    }			
+    data = requests.get(ApiQuery, headers=headers).content.decode("utf-8")
+
+except:
+    debug('search request failed')
+
+op('request_output').text = data
